@@ -3,16 +3,16 @@ FROM anapsix/alpine-java:latest
 MAINTAINER Aditya Prima <aprimediet@gmail.com>
 
 
-ENV SERVICE_NAME=zk
-ENV SERVICE_HOME=/opt/zk
-ENV SERVICE_CONF=/opt/zk/conf/zoo.cfg
-ENV SERVICE_VERSION=3.4.11
-ENV SERVICE_USER=zookeeper
-ENV SERVICE_UID=10002
-ENV SERVICE_GROUP=zookeeper
-ENV SERVICE_GID=10002
-ENV SERVICE_VOLUME=/opt/tools
-ENV PATH=${PATH}:/opt/zk/bin
+ENV SERVICE_NAME=zk \
+    SERVICE_HOME=/opt/zk \
+    SERVICE_CONF=/opt/zk/conf/zoo.cfg \
+    SERVICE_VERSION=3.4.11 \
+    SERVICE_USER=zookeeper \
+    SERVICE_UID=10002 \
+    SERVICE_GROUP=zookeeper \
+    SERVICE_GID=10002 \
+    SERVICE_VOLUME=/opt/tools \
+    PATH=${PATH}:/opt/zk/bin
 
 # Install service software
 RUN SERVICE_RELEASE=zookeeper-${SERVICE_VERSION} && \
@@ -37,18 +37,15 @@ RUN SERVICE_RELEASE=zookeeper-${SERVICE_VERSION} && \
       ${SERVICE_HOME}/bin/*.cmd && \
     addgroup -g ${SERVICE_GID} ${SERVICE_GROUP} && \
     adduser -g "${SERVICE_NAME} user" -D -h ${SERVICE_HOME} -G ${SERVICE_GROUP} -s /sbin/nologin -u ${SERVICE_UID} ${SERVICE_USER} 
-# ADD root /
+
+COPY zoo.cfg $SERVICE_HOME/conf/
+
 RUN chmod +x ${SERVICE_HOME}/bin/*.sh \
     && chown -R ${SERVICE_USER}:${SERVICE_GROUP} ${SERVICE_HOME}
-# && chown -R ${SERVICE_USER}:${SERVICE_GROUP} ${SERVICE_HOME} /opt/monit
 
 USER $SERVICE_USER
 WORKDIR $SERVICE_HOME
 
-COPY zoo.cfg $SERVICE_HOME/conf/
-
 EXPOSE 2181 2888 3888
 
-# HEALTHCHECK CMD monit summary | grep Running | grep -q zk-service || exit 1
-
-CMD [ "/bin/bash" ]
+CMD [ "bin/zkServer.sh", "start-foreground" ]
